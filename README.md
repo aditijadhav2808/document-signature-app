@@ -1,168 +1,120 @@
-\# Document Signature App
+# Document Signature App
 
+## Overview
 
+Document Signature App is a full-stack web application built using FastAPI and React. The application allows users to upload PDF documents, place signatures, manage approval workflows, and generate signed PDF files. It demonstrates secure authentication, file management, PDF processing, and frontend-backend integration.
 
-\## Overview
+## Features
 
+* User Registration and Login
+* Secure Password Hashing with Bcrypt
+* JWT-Based Authentication
+* PDF Upload and Storage
+* PDF Preview in Browser
+* Signature Placement and Management
+* Signature Approval and Rejection Workflow
+* Generate Signed PDF Documents
+* Audit Log Tracking
+* SQLite Database Integration
+* REST API Architecture
 
+## Tech Stack
 
-Document Signature App is a web-based application built using FastAPI and React that allows users to upload PDF documents, manage signatures, approve or reject signature requests, and generate signed PDF files.
+### Backend
 
+* FastAPI
+* SQLAlchemy
+* SQLite
+* JWT Authentication
+* Bcrypt
+* PyMuPDF
 
+### Frontend
 
-\## Features
+* React
+* Vite
+* JavaScript
+* CSS
 
+## Installation
 
+### Backend Setup
 
-\* User Registration and Login
-
-\* JWT Authentication
-
-\* Upload PDF Documents
-
-\* View Uploaded PDFs
-
-\* Manage Signatures
-
-\* Approve / Reject Documents
-
-\* Generate Signed PDF
-
-\* SQLite Database Integration
-
-\* Responsive User Interface
-
-
-
-\## Tech Stack
-
-
-
-\### Backend
-
-
-
-\* FastAPI
-
-\* SQLAlchemy
-
-\* SQLite
-
-\* JWT Authentication
-
-\* PyMuPDF
-
-
-
-\### Frontend
-
-
-
-\* React
-
-\* Vite
-
-\* JavaScript
-
-\* CSS
-
-
-
-\## Installation
-
-
-
-\### Backend
-
-
-
-bash
-
+```bash
 cd backend
 
 pip install -r requirements.txt
 
 uvicorn main:app --reload
+```
 
+Backend URL:
 
+```text
+http://127.0.0.1:8000
+```
 
+### Frontend Setup
 
-
-\### Frontend
-
-
-
-bash
-
+```bash
 cd frontend
 
 npm install
 
 npm run dev
+```
 
+Frontend URL:
 
+```text
+http://localhost:5173
+```
 
+## Project Structure
 
-
-\## Project Structure
-
-
-
-text
-
+```text
 document-signature-app/
-
+│
 ├── backend/
-
+│   ├── main.py
+│   ├── models.py
+│   ├── database.py
+│   └── auth.py
+│
 ├── frontend/
+│   ├── src/
+│   ├── components/
+│   └── pages/
+│
+└── README.md
+```
 
-├── README.md
+## Application Workflow
 
+1. Register a new user account
+2. Login using credentials
+3. Upload a PDF document
+4. Preview the uploaded PDF
+5. Add signature details
+6. Approve or reject signatures
+7. Generate a signed PDF document
+8. Download or view the signed PDF
 
+## Future Enhancements
 
+* Email Notifications
+* Public Signing Links
+* Cloud Storage Integration
+* Multi-User Signing Workflow
+* Digital Signature Certificates
+* Deployment on Cloud Platforms
 
+## Author
 
-\## Workflow
+**Aditi Jadhav**
 
+AI & ML Diploma Student
 
+## GitHub Repository
 
-1\. Register User
-
-2\. Login User
-
-3\. Upload PDF
-
-4\. View Document
-
-5\. Approve / Reject Signature
-
-6\. Generate Signed PDF
-
-
-
-\## Future Enhancements
-
-
-
-\* Email Notifications
-
-\* Cloud Storage
-
-\* Multi-user Signing
-
-\* Digital Signature Certificates
-
-\* Deployment on Cloud
-
-
-
-\## Author
-
-
-
-Aditi Jadhav
-
-AI \& ML Diploma Student
-
-
-
+Document Signature App built using FastAPI and React.
