@@ -3,7 +3,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import fitz
-import time
+import secrets
 
 from database import engine, Base, get_db
 from models import User, Document, Signature, AuditLog
@@ -36,8 +36,6 @@ Base.metadata.create_all(bind=engine)
 def home():
     return {"message": "Backend working with database"}
 
-
-# ---------------- USER ---------------- #
 
 @app.post("/register")
 def register(
@@ -94,8 +92,6 @@ def login(
     }
 
 
-# ---------------- DOCUMENTS ---------------- #
-
 @app.post("/upload")
 def upload_pdf(
     user_id: int,
@@ -138,8 +134,6 @@ def get_documents(
     return db.query(Document).all()
 
 
-# ---------------- SIGNATURES ---------------- #
-
 @app.post("/signatures")
 def create_signature(
     document_id: int,
@@ -176,8 +170,6 @@ def get_signatures(
     db: Session = Depends(get_db)
 ):
     return db.query(Signature).all()
-
-
 @app.put("/signatures/{signature_id}")
 def update_signature_status(
     signature_id: int,
@@ -203,9 +195,10 @@ def update_signature_status(
     return signature
 
 
-@app.delete("/signatures/{signature_id}")
-def delete_signature(
+@app.put("/reject-signature/{signature_id}")
+def reject_signature(
     signature_id: int,
+    reason: str,
     db: Session = Depends(get_db)
 ):
     signature = db.query(Signature).filter(
@@ -215,15 +208,14 @@ def delete_signature(
     if not signature:
         return {"error": "Signature not found"}
 
-    db.delete(signature)
+    signature.status = "rejected"
+    signature.rejection_reason = reason
+
     db.commit()
+    db.refresh(signature)
 
-    return {
-        "message": "Signature deleted successfully"
-    }
+    return signature
 
-
-# ---------------- PDF GENERATION ---------------- #
 
 @app.post("/generate-pdf/{document_id}")
 def generate_signed_pdf(
@@ -237,50 +229,33 @@ def generate_signed_pdf(
     if not document:
         return {"error": "Document not found"}
 
-    signature = db.query(Signature).filter(
+    signatures = db.query(Signature).filter(
         Signature.document_id == document_id,
         Signature.status == "approved"
-    ).order_by(Signature.id.desc()).first()
+    ).all()
 
     pdf = fitz.open(document.filepath)
 
-    if signature:
+    for sig in signatures:
+        page = pdf[sig.page - 1]
 
-        page = pdf[-1]
+        pdf_color = (0, 0, 1)
 
-        page_height = page.rect.height
-
-        x = 100
-        y = page_height - 50
-
-        pdf_color = (0, 0, 0)
-
-        if signature.color == "red":
+        if sig.color == "red":
             pdf_color = (1, 0, 0)
-
-        elif signature.color == "green":
+        elif sig.color == "green":
             pdf_color = (0, 1, 0)
-
-        elif signature.color == "blue":
-            pdf_color = (0, 0, 1)
-
-        page.insert_text(
-            (x, y - 15),
-            "Signed by:",
-            fontsize=10,
-            color=(0, 0, 0)
-        )
+        elif sig.color == "black":
+            pdf_color = (0, 0, 0)
 
         page.insert_text(
-            (x, y),
-            signature.signature_text,
-            fontsize=signature.font_size,
+            (sig.x, sig.y),
+            sig.signature_text,
+            fontsize=sig.font_size,
             color=pdf_color
         )
 
-    output_path = (
-        f"uploads/signed_{int(time.time())}_{document.filename}"
-    )
+    output_path = f"uploads/signed_{document.filename}"
 
     pdf.save(output_path)
     pdf.close()
@@ -288,6 +263,33 @@ def generate_signed_pdf(
     return {
         "message": "Signed PDF generated",
         "file": output_path
+    }
+
+
+@app.get("/audit-logs")
+def get_audit_logs(
+    db: Session = Depends(get_db)
+):
+    return db.query(AuditLog).all()
+
+
+@app.post("/create-public-link/{document_id}")
+def create_public_link(
+    document_id: int,
+    db: Session = Depends(get_db)
+):
+    document = db.query(Document).filter(
+        Document.id == document_id
+    ).first()
+
+    if not document:
+        return {"error": "Document not found"}
+
+    token = secrets.token_urlsafe(32)
+
+    return {
+        "public_link":
+        f"http://localhost:5173/sign/{token}"
     }
 
 

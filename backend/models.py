@@ -1,3 +1,4 @@
+
 from sqlalchemy import Column, Integer, String, ForeignKey
 from database import Base
 
@@ -19,23 +20,46 @@ class Document(Base):
     filepath = Column(String)
     user_id = Column(Integer)
 
+    public_token = Column(String, nullable=True)
 
 class Signature(Base):
     __tablename__ = "signatures"
 
     id = Column(Integer, primary_key=True, index=True)
+
     document_id = Column(Integer, ForeignKey("documents.id"))
     user_id = Column(Integer, ForeignKey("users.id"))
+
     x = Column(Integer)
     y = Column(Integer)
     page = Column(Integer)
 
-    status = Column(String, default="pending")
+    signature_text = Column(
+        String,
+        default="SIGNED"
+    )
+
+    font_size = Column(
+        Integer,
+        default=24
+    )
+
+    color = Column(
+        String,
+        default="blue"
+    )
+
+    status = Column(
+        String,
+        default="pending"
+    )
 
     rejection_reason = Column(
         String,
         nullable=True
     )
+
+
 class AuditLog(Base):
     __tablename__ = "audit_logs"
 

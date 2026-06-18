@@ -1,21 +1,16 @@
-export default function PDFViewer({ pdfUrl }) {
-  if (!pdfUrl) {
-    return (
-      <div>
-        <h3>No PDF Selected</h3>
-      </div>
-    );
-  }
-
+export default function PDFViewer({
+  pdfUrl,
+}) {
   return (
-    <div style={{ width: "800px" }}>
-      <iframe
-        src={pdfUrl}
-        width="800"
-        height="1000"
-        style={{ border: "1px solid black" }}
-        title="PDF"
-      />
-    </div>
+    <iframe
+      src={pdfUrl}
+      width="100%"
+      height="700"
+      title="PDF"
+      style={{
+        border: "1px solid #ddd",
+        borderRadius: "10px",
+      }}
+    />
   );
 }

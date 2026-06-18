@@ -1,37 +1,49 @@
 import { useState } from "react";
-import Register from "./pages/Register";
-import Login from "./pages/Login";
 import UploadPage from "./pages/UploadPage";
 import PDFViewer from "./components/PDFViewer";
 import DocumentView from "./pages/DocumentView";
-import Documents from "./pages/Documents";
 
 export default function App() {
   const [pdfUrl, setPdfUrl] = useState("");
 
   return (
-    <div>
-      <Register />
-
-      <hr />
-
-      <Login />
-
-      <hr />
+    <div
+      style={{
+        maxWidth: "1200px",
+        margin: "auto",
+        padding: "20px",
+        fontFamily: "Arial",
+      }}
+    >
+      <h1
+        style={{
+          textAlign: "center",
+          color: "#2563eb",
+        }}
+      >
+        Document Signature App
+      </h1>
 
       <UploadPage setPdfUrl={setPdfUrl} />
 
       <hr />
 
-      <PDFViewer pdfUrl={pdfUrl} />
+      {pdfUrl && (
+        <>
+          <h2>PDF Preview</h2>
 
-      <hr />
+          <PDFViewer pdfUrl={pdfUrl} />
 
-      <DocumentView />
+          <hr />
 
-      <hr />
-
-      <Documents />
+          <DocumentView
+            position={{
+              x: 100,
+              y: 100,
+            }}
+          />
+        </>
+      )}
     </div>
   );
 }

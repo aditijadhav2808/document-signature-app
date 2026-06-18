@@ -3,7 +3,6 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 import fitz
-import time
 
 from database import engine, Base, get_db
 from models import User, Document, Signature, AuditLog
@@ -36,8 +35,6 @@ Base.metadata.create_all(bind=engine)
 def home():
     return {"message": "Backend working with database"}
 
-
-# ---------------- USER ---------------- #
 
 @app.post("/register")
 def register(
@@ -94,8 +91,6 @@ def login(
     }
 
 
-# ---------------- DOCUMENTS ---------------- #
-
 @app.post("/upload")
 def upload_pdf(
     user_id: int,
@@ -117,14 +112,6 @@ def upload_pdf(
     db.commit()
     db.refresh(document)
 
-    log = AuditLog(
-        action="PDF Uploaded",
-        details=f"Document ID {document.id}"
-    )
-
-    db.add(log)
-    db.commit()
-
     return {
         "message": "PDF uploaded successfully",
         "document_id": document.id
@@ -138,8 +125,6 @@ def get_documents(
     return db.query(Document).all()
 
 
-# ---------------- SIGNATURES ---------------- #
-
 @app.post("/signatures")
 def create_signature(
     document_id: int,
@@ -147,9 +132,6 @@ def create_signature(
     x: int,
     y: int,
     page: int,
-    signature_text: str = "SIGNED",
-    font_size: int = 24,
-    color: str = "blue",
     db: Session = Depends(get_db)
 ):
     signature = Signature(
@@ -158,9 +140,6 @@ def create_signature(
         x=x,
         y=y,
         page=page,
-        signature_text=signature_text,
-        font_size=font_size,
-        color=color,
         status="pending"
     )
 
@@ -182,7 +161,6 @@ def get_signatures(
 def update_signature_status(
     signature_id: int,
     status: str,
-    rejection_reason: str = "",
     db: Session = Depends(get_db)
 ):
     signature = db.query(Signature).filter(
@@ -194,36 +172,11 @@ def update_signature_status(
 
     signature.status = status
 
-    if status == "rejected":
-        signature.rejection_reason = rejection_reason
-
     db.commit()
     db.refresh(signature)
 
     return signature
 
-
-@app.delete("/signatures/{signature_id}")
-def delete_signature(
-    signature_id: int,
-    db: Session = Depends(get_db)
-):
-    signature = db.query(Signature).filter(
-        Signature.id == signature_id
-    ).first()
-
-    if not signature:
-        return {"error": "Signature not found"}
-
-    db.delete(signature)
-    db.commit()
-
-    return {
-        "message": "Signature deleted successfully"
-    }
-
-
-# ---------------- PDF GENERATION ---------------- #
 
 @app.post("/generate-pdf/{document_id}")
 def generate_signed_pdf(
@@ -237,49 +190,24 @@ def generate_signed_pdf(
     if not document:
         return {"error": "Document not found"}
 
-    signature = db.query(Signature).filter(
+    signatures = db.query(Signature).filter(
         Signature.document_id == document_id,
         Signature.status == "approved"
-    ).order_by(Signature.id.desc()).first()
+    ).all()
 
     pdf = fitz.open(document.filepath)
 
-    if signature:
-
-        page = pdf[-1]
-
-        page_height = page.rect.height
-
-        x = 100
-        y = page_height - 50
-
-        pdf_color = (0, 0, 0)
-
-        if signature.color == "red":
-            pdf_color = (1, 0, 0)
-
-        elif signature.color == "green":
-            pdf_color = (0, 1, 0)
-
-        elif signature.color == "blue":
-            pdf_color = (0, 0, 1)
+    for sig in signatures:
+        page = pdf[sig.page - 1]
 
         page.insert_text(
-            (x, y - 15),
-            "Signed by:",
-            fontsize=10,
-            color=(0, 0, 0)
-        )
-
-        page.insert_text(
-            (x, y),
-            signature.signature_text,
-            fontsize=signature.font_size,
-            color=pdf_color
+            (sig.x, sig.y),
+            "SIGNED",
+            fontsize=12
         )
 
     output_path = (
-        f"uploads/signed_{int(time.time())}_{document.filename}"
+        f"uploads/signed_{document.filename}"
     )
 
     pdf.save(output_path)
@@ -289,13 +217,8 @@ def generate_signed_pdf(
         "message": "Signed PDF generated",
         "file": output_path
     }
-
-
-@app.get("/public-document/{token}")
-def get_public_document(
-    token: str
+@app.get("/audit-logs")
+def get_audit_logs(
+    db: Session = Depends(get_db)
 ):
-    return {
-        "message": "Public document endpoint working",
-        "token": token
-    }
+    return db.query(AuditLog).all()

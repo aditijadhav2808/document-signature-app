@@ -1,44 +1,45 @@
 import { useState } from "react";
-import API from "../api";
+import axios from "axios";
 
-export default function UploadPage({ setPdfUrl }) {
+export default function UploadPage({
+  setPdfUrl,
+}) {
   const [file, setFile] = useState(null);
 
-  const uploadFile = async () => {
+  const uploadPDF = () => {
     if (!file) {
-      alert("Select a PDF first");
+      alert("Please select a PDF");
       return;
     }
 
     const formData = new FormData();
+
     formData.append("file", file);
 
-    try {
-      await API.post(
-        "/upload?user_id=1",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+    axios
+      .post(
+        "http://127.0.0.1:8000/upload?user_id=1",
+        formData
+      )
+      .then((res) => {
+        alert("PDF Uploaded!");
 
-      const pdfPath =
-        "http://127.0.0.1:8000/uploads/" +
-        file.name;
+        const pdfPath =
+          "http://127.0.0.1:8000/uploads/" +
+          file.name;
 
-      setPdfUrl(pdfPath);
+        setPdfUrl(pdfPath);
 
-      alert("PDF Uploaded Successfully");
-    } catch (err) {
-      console.log(err);
-      alert("Upload Failed");
-    }
+        console.log(pdfPath);
+      })
+      .catch((err) => {
+        console.log(err);
+        alert("Upload Failed");
+      });
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div>
       <h2>Upload PDF</h2>
 
       <input
@@ -52,7 +53,7 @@ export default function UploadPage({ setPdfUrl }) {
       <br />
       <br />
 
-      <button onClick={uploadFile}>
+      <button onClick={uploadPDF}>
         Upload PDF
       </button>
     </div>
